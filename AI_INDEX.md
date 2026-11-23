@@ -19,6 +19,7 @@
 - HTTP: View -> module API -> shared HTTP -> backend BFF
 - Auth: memory-only access token + HttpOnly refresh cookie + server-side RBAC
 - MQTT: backend ticket -> WSS + Broker ACL -> validated feature messages
-- Map: PGM + ROS YAML -> validated occupancy grid -> Three.js
+- Map: PGM + ROS YAML / PCD -> validated map data -> Three.js + robot / route / event overlays
+- Command center: device API + task API; patrol events, localization and camera playback still require backend integration
 
 Do not scan node_modules, generated bundles, binary maps, meshes or raw logs unless needed for the task.
