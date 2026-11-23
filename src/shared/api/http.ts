@@ -1,206 +1,21 @@
-import { tokenStore } from '@/shared/auth/token-store'
+import {
+  AUTH_ENDPOINTS,
+  ApiError,
+  DEFAULT_TIMEOUT_MS,
+  canReplay,
+  execute,
+  normalizePath,
+  notifySessionExpired,
+  tokenForRetry,
+  type RequestOptions,
+} from './http-core'
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
-const DEFAULT_TIMEOUT_MS = 15_000
-const AUTH_ENDPOINTS = new Set(['/auth/login', '/auth/refresh', '/auth/logout'])
-
-export interface RequestOptions extends RequestInit {
-  timeoutMs?: number
-  auth?: boolean
-}
-
-export class ApiError extends Error {
-  constructor(
-    public readonly status: number,
-    message: string,
-    public readonly body?: unknown,
-    public readonly requestId?: string,
-  ) {
-    super(message)
-    this.name = 'ApiError'
-  }
-}
-
-function normalizePath(path: string) {
-  return path.startsWith('/') ? path : `/${path}`
-}
-
-function bodyMessage(body: unknown, fallback: string): string {
-  if (typeof body !== 'object' || body === null) return fallback
-  for (const key of ['message', 'detail', 'error']) {
-    const value = (body as Record<string, unknown>)[key]
-    if (typeof value === 'string' && value.trim()) return value
-  }
-  return fallback
-}
-
-async function parseBody(response: Response): Promise<unknown> {
-  if (response.status === 204 || response.status === 205) return undefined
-  const text = await response.text()
-  if (!text) return undefined
-  const contentType = response.headers.get('content-type') || ''
-  if (!contentType.includes('application/json')) return text
-  try {
-    return JSON.parse(text) as unknown
-  } catch {
-    throw new ApiError(
-      response.status,
-      '服务器返回了无效 JSON',
-      undefined,
-      response.headers.get('x-request-id') || undefined,
-    )
-  }
-}
-
-/** Timeout covers both response headers and the complete response body. */
-async function fetchWithTimeout<T>(
-  url: string,
-  init: RequestInit,
-  timeoutMs: number,
-  consume: (response: Response) => Promise<T>,
-): Promise<T> {
-  const controller = new AbortController()
-  let timedOut = false
-  const abortFromCaller = () => controller.abort(init.signal?.reason)
-  if (init.signal?.aborted) abortFromCaller()
-  else init.signal?.addEventListener('abort', abortFromCaller, { once: true })
-
-  const timer = setTimeout(() => {
-    timedOut = true
-    controller.abort(new Error('Request timeout'))
-  }, timeoutMs)
-
-  try {
-    const response = await fetch(url, { ...init, signal: controller.signal })
-    return await consume(response)
-  } catch (error) {
-    if (error instanceof ApiError) throw error
-    if (timedOut) throw new ApiError(408, `请求超时（${timeoutMs}ms）`)
-    if (init.signal?.aborted) throw new ApiError(499, '请求已取消')
-    throw new ApiError(0, error instanceof Error ? error.message : '网络连接失败')
-  } finally {
-    clearTimeout(timer)
-    init.signal?.removeEventListener('abort', abortFromCaller)
-  }
-}
-
-let refreshPromise: Promise<string | null> | null = null
-
-async function refreshAccessToken(timeoutMs: number): Promise<string | null> {
-  if (!refreshPromise) {
-    refreshPromise = fetchWithTimeout(
-      `${API_BASE}/auth/refresh`,
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: { Accept: 'application/json' },
-      },
-      timeoutMs,
-      async (response) => {
-        if (!response.ok) return null
-        const body = await parseBody(response)
-        if (typeof body !== 'object' || body === null) return null
-        const token = (body as Record<string, unknown>).accessToken
-        if (typeof token !== 'string' || !token) return null
-        tokenStore.set(token)
-        return token
-      },
-    ).catch(() => null).finally(() => {
-      refreshPromise = null
-    })
-  }
-  return refreshPromise
-}
-
-function canReplay(method: string, headers: Headers): boolean {
-  return ['GET', 'HEAD', 'OPTIONS'].includes(method) || headers.has('Idempotency-Key')
-}
-
-function requestHeaders(init: RequestInit, accessToken: string | null): Headers {
-  const headers = new Headers(init.headers)
-  headers.set('Accept', 'application/json')
-  const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData
-  if (init.body !== undefined && init.body !== null && !isFormData && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json')
-  }
-  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`)
-  else headers.delete('Authorization')
-  return headers
-}
-
-async function execute<T>(
-  path: string,
-  init: RequestInit,
-  timeoutMs: number,
-  accessToken: string | null,
-): Promise<T> {
-  const headers = requestHeaders(init, accessToken)
-  return fetchWithTimeout(
-    `${API_BASE}${path}`,
-    { ...init, headers, credentials: 'include' },
-    timeoutMs,
-    async (response) => {
-      const body = await parseBody(response)
-      if (!response.ok) {
-        throw new ApiError(
-          response.status,
-          bodyMessage(body, response.statusText || '请求失败'),
-          body,
-          response.headers.get('x-request-id') || undefined,
-        )
-      }
-      return body as T
-    },
-  )
-}
-
-async function executeBlob(
-  path: string,
-  init: RequestInit,
-  timeoutMs: number,
-  accessToken: string | null,
-): Promise<Blob> {
-  const headers = requestHeaders(init, accessToken)
-  headers.set('Accept', 'application/octet-stream, */*')
-  return fetchWithTimeout(
-    `${API_BASE}${path}`,
-    { ...init, headers, credentials: 'include' },
-    timeoutMs,
-    async (response) => {
-      if (!response.ok) {
-        const body = await parseBody(response)
-        throw new ApiError(
-          response.status,
-          bodyMessage(body, response.statusText || '文件请求失败'),
-          body,
-          response.headers.get('x-request-id') || undefined,
-        )
-      }
-      if (response.status === 204 || response.status === 205) return new Blob()
-      return response.blob()
-    },
-  )
-}
-
-async function tokenForRetry(previousToken: string | null, timeoutMs: number): Promise<string | null> {
-  const latestToken = tokenStore.get()
-  if (latestToken && latestToken !== previousToken) return latestToken
-  return refreshAccessToken(timeoutMs)
-}
-
-function notifySessionExpired() {
-  tokenStore.clear()
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event('robotops:session-expired'))
-  }
-}
+export { ApiError, type RequestOptions } from './http-core'
 
 /**
- * Shared HTTP entry point.
- * - memory-only Bearer access token + HttpOnly refresh cookie
- * - single-flight 401 refresh; unsafe writes replay only with Idempotency-Key
- * - request timeout includes response body consumption
- * - AbortSignal cancellation and normalized ApiError
+ * Shared JSON HTTP entry point.
+ * Access token is memory-only; refresh token is an HttpOnly cookie.
+ * Unsafe writes require Idempotency-Key before retry after a 401.
  */
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const normalizedPath = normalizePath(path)
@@ -208,7 +23,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const { timeoutMs = DEFAULT_TIMEOUT_MS, auth = true, ...init } = options
   const method = (init.method || 'GET').toUpperCase()
   const headers = new Headers(init.headers)
-  const token = auth ? tokenStore.get() : null
+  const token = auth ? (await import('@/shared/auth/token-store')).tokenStore.get() : null
 
   try {
     return await execute<T>(normalizedPath, init, timeoutMs, token)
@@ -228,33 +43,6 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 }
 
-/** Binary download uses the same timeout, refresh, cancellation and error rules as JSON requests. */
-async function download(path: string, options: RequestOptions = {}): Promise<Blob> {
-  const normalizedPath = normalizePath(path)
-  const endpointPath = normalizedPath.split('?', 1)[0]
-  const { timeoutMs = DEFAULT_TIMEOUT_MS, auth = true, ...init } = options
-  const method = (init.method || 'GET').toUpperCase()
-  const headers = new Headers(init.headers)
-  const token = auth ? tokenStore.get() : null
-
-  try {
-    return await executeBlob(normalizedPath, init, timeoutMs, token)
-  } catch (error) {
-    if (!(error instanceof ApiError) || error.status !== 401 || !auth || AUTH_ENDPOINTS.has(endpointPath)) {
-      throw error
-    }
-    const refreshed = await tokenForRetry(token, timeoutMs)
-    if (!refreshed) {
-      notifySessionExpired()
-      throw error
-    }
-    if (!canReplay(method, headers)) {
-      throw new ApiError(401, '会话已刷新，请重新提交本次文件操作', error.body, error.requestId)
-    }
-    return executeBlob(normalizedPath, init, timeoutMs, refreshed)
-  }
-}
-
 export const http = {
   get: <T>(path: string, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'GET' }),
@@ -270,7 +58,4 @@ export const http = {
     request<T>(path, { ...options, method: 'PATCH', body: JSON.stringify(body) }),
   delete: <T>(path: string, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'DELETE' }),
-  upload: <T>(path: string, form: FormData, options?: RequestOptions) =>
-    request<T>(path, { ...options, method: 'POST', body: form }),
-  download,
 }
