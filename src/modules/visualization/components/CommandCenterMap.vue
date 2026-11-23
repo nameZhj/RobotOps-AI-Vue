@@ -63,9 +63,6 @@ const mapHint = ref('演示定位与路线 · 导入真实地图后，等待机�
 const error = ref('')
 const parsedPgm = ref<ReturnType<typeof parsePgm> | null>(null)
 const yamlMetadata = ref<MapYamlMetadata | null>(null)
-const pgmInput = ref<HTMLInputElement | null>(null)
-const yamlInput = ref<HTMLInputElement | null>(null)
-const pcdInput = ref<HTMLInputElement | null>(null)
 
 function clearDemoOverlays() {
   isDemo.value = false
@@ -163,9 +160,9 @@ async function onPcd(event: Event) {
         <small>{{ mapName }} · {{ mapHint }}</small>
       </div>
       <div class="map-import-actions">
-        <label class="map-import-button">PGM<input ref="pgmInput" type="file" accept=".pgm" @change="onPgm"></label>
-        <label class="map-import-button">YAML<input ref="yamlInput" type="file" accept=".yaml,.yml" @change="onYaml"></label>
-        <label class="map-import-button">PCD<input ref="pcdInput" type="file" accept=".pcd" @change="onPcd"></label>
+        <label class="map-import-button">PGM<input type="file" accept=".pgm" @change="onPgm"></label>
+        <label class="map-import-button">YAML<input type="file" accept=".yaml,.yml" @change="onYaml"></label>
+        <label class="map-import-button">PCD<input type="file" accept=".pcd" @change="onPcd"></label>
       </div>
     </div>
     <div class="map-render-area">
