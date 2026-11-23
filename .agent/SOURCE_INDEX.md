@@ -1,6 +1,6 @@
 # Generated Source Index
 
-> Rebuild with `npm run ai:index`. Keep this as a compact symbol locator, not a second README.
+> Rebuild with `npm run ai:index`. Keep this as a compact symbol locator.
 
 | Path | Exported symbols |
 |---|---|
@@ -24,3 +24,4 @@
 | `src/shared/mqtt/client.ts` | MqttGatewayClient |
 | `src/shared/mqtt/ticket-api.ts` | requestMqttTicket |
 | `src/shared/mqtt/types.ts` | MqttConnectionState, MqttConnectTicket, MqttIncomingMessage, MqttStateSnapshot |
+| `src/shared/mqtt/validation.ts` | validateTicket, validateTopic, topicMatches |
