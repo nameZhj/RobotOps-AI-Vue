@@ -10,4 +10,19 @@ export interface OccupancyGrid {
 export interface RouteNode { id: string; x: number; y: number; yaw?: number; name?: string }
 export interface RouteEdge { id: string; from: string; to: string; bidirectional: boolean; speedLimit?: number }
 export interface RouteGraph { nodes: RouteNode[]; edges: RouteEdge[] }
+export interface MapRobotMarker {
+  id: string
+  label: string
+  x: number
+  y: number
+  heading?: number
+  state: 'online' | 'offline'
+}
+export interface MapEventMarker {
+  id: string
+  label: string
+  x: number
+  y: number
+  severity: 'warning' | 'critical'
+}
 export interface MapDocument { id: string; name: string; grid: OccupancyGrid; routes: RouteGraph }
