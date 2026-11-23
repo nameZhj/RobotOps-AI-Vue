@@ -47,11 +47,17 @@ onMounted(() => {
   if (!viewport.value) return
   resizeObserver = new ResizeObserver(updateScale)
   resizeObserver.observe(viewport.value)
+  window.addEventListener('resize', updateScale, { passive: true })
+  window.visualViewport?.addEventListener('resize', updateScale, { passive: true })
+  document.addEventListener('fullscreenchange', updateScale)
   updateScale()
 })
 
 onBeforeUnmount(() => {
   resizeObserver?.disconnect()
+  window.removeEventListener('resize', updateScale)
+  window.visualViewport?.removeEventListener('resize', updateScale)
+  document.removeEventListener('fullscreenchange', updateScale)
   document.documentElement.classList.remove('visualization-mode')
   document.body.classList.remove('visualization-mode')
 })
