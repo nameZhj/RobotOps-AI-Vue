@@ -19,7 +19,7 @@
 | devices | Robot/AGV inventory and status | src/modules/devices/types.ts, api.ts |
 | maps | PGM/YAML, PCD, coordinates and route graph | src/modules/maps/pgm-parser.ts, yaml-metadata.ts, coordinates.ts, components/MapViewport.vue |
 | tasks | Task queue and lifecycle | src/modules/tasks/types.ts, api.ts |
-| visualization | Fixed-canvas 16:9 display | src/modules/visualization/README.md, views/CommandCenterView.vue, views/command-center.css |
+| visualization | Fixed-canvas 16:9 robot command center | src/modules/visualization/README.md, views/CommandCenterView.vue, components/, views/command-center*.css |
 | logs | Structured event list | src/modules/logs/views/LogListView.vue |
 
 ## Display modes
