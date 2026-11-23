@@ -32,17 +32,13 @@ npm run dev
 
 ### HTTP
 
-统一入口：`src/shared/api/http.ts`。
-
-具备 15 秒默认超时、AbortSignal 取消、统一 ApiError、204/205 空响应、并发 401 single-flight refresh。GET/HEAD/OPTIONS 可在刷新后重试；写请求必须携带 `Idempotency-Key` 才会自动重放。不会盲目重试任务创建或控制命令。
+统一入口：`src/shared/api/http.ts`。具备 15 秒默认超时、AbortSignal 取消、统一 ApiError、204/205 空响应、并发 401 single-flight refresh。GET/HEAD/OPTIONS 可在刷新后重试；写请求必须携带 `Idempotency-Key` 才会自动重放。不会盲目重试任务创建或控制命令。
 
 详细契约：`docs/contracts/http-client.md`。
 
 ### MQTT
 
-统一入口：`src/shared/mqtt/client.ts`。
-
-只使用 MQTT over WSS。前端先通过登录态调用后端 `POST /api/realtime/mqtt-ticket` 获取短时、受 Topic ACL 限制的凭证；客户端负责连接状态、keepalive、重连退避、凭证续签、订阅恢复和 disposer。禁止在前端写死 Broker 账号密码。
+统一入口：`src/shared/mqtt/client.ts`。只使用 MQTT over WSS。前端先通过登录态调用后端 `POST /api/realtime/mqtt-ticket` 获取短时、受 Topic ACL 限制的凭证；客户端负责连接状态、keepalive、重连退避、凭证续签、订阅恢复和 disposer。禁止在前端写死 Broker 账号密码。
 
 详细契约：`docs/contracts/mqtt-gateway.md`。
 
@@ -50,7 +46,7 @@ npm run dev
 
 支持 320px 起的窄屏、平板、桌面和超宽显示器。布局优先使用 `clamp()`、`minmax(0, 1fr)`、`min-width: 0` 和局部滚动，不通过挤压文字来适配。统一颜色 Token、按钮状态、焦点样式和文字对比度。
 
-正常文字与背景以 WCAG 2.2 AA 4.5:1 为目标；状态不只靠颜色表达。规范见 `AGENTS.md` 第 3 节。
+普通文字与背景以 WCAG 2.2 AA 4.5:1 为目标；状态不只靠颜色表达。规范见 `AGENTS.md` 第 3 节。
 
 ## 常用命令
 
@@ -61,7 +57,7 @@ npm run build        # 生产构建
 npm run ai:index     # 更新 Agent 符号索引
 ```
 
-本仓库不保留单元测试文件；改动通过 typecheck、production build 和模块 smoke checklist 验证。
+本仓库不保留单元测试文件或测试运行器；改动通过 typecheck、production build 和 `docs/manual-smoke-check.md` 验证。
 
 ## 目录导航
 
@@ -69,7 +65,7 @@ npm run ai:index     # 更新 Agent 符号索引
 |---|---|
 | `src/modules/` | auth、dashboard、devices、maps、tasks、visualization、logs |
 | `src/shared/api/` | HTTP 请求、刷新、错误 |
-| `src/shared/mqtt/` | MQTT ticket、WSS 客户端和订阅 |
+| `src/shared/mqtt/` | MQTT ticket、WSS 客户端、Topic 校验和订阅 |
 | `src/shared/auth/` | Token 与权限 |
 | `src/platform/` | 机器人协议适配器 |
 | `src/styles/` | 颜色、排版、响应式与 Element Plus 主题 |
