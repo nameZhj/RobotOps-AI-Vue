@@ -5,7 +5,7 @@
 ## Architecture
 
 - App: `src/main.ts`, `src/app/`
-- Theme/layout: `src/styles/`, `src/shared/layout/`
+- Theme/layout: `src/styles/`, `src/shared/layout/app-layout.css`
 - HTTP/auth: `src/shared/api/http.ts`, `src/shared/auth/`
 - MQTT: `src/shared/mqtt/client.ts`, `ticket-api.ts`, `validation.ts`, `types.ts`
 - Robot adapters: `src/platform/robot/`
@@ -19,7 +19,7 @@
 | devices | Robot/AGV inventory and state | `src/modules/devices/types.ts`, `api.ts` |
 | maps | PGM/YAML, PCD, coordinate transform and route graph | `src/modules/maps/pgm-parser.ts`, `yaml-metadata.ts`, `coordinates.ts`, `components/MapViewport.vue` |
 | tasks | Task queue and lifecycle | `src/modules/tasks/types.ts`, `api.ts` |
-| visualization | Operations dashboard | `src/modules/visualization/views/CommandCenterView.vue` |
+| visualization | Operations dashboard | `src/modules/visualization/views/CommandCenterView.vue`, `command-center.css` |
 | logs | Structured event list | `src/modules/logs/views/LogListView.vue` |
 
 ## Network contracts
