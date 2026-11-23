@@ -18,6 +18,11 @@ const activity = [
   { time: '09:35:51', device: 'AGV-008', event: '电量低于 20%', state: '告警' },
   { time: '09:30:12', device: 'G1-002', event: '设备状态上报恢复', state: '成功' },
 ]
+function eventTagType(state: string) {
+  if (state === '告警') return 'danger'
+  if (state === '运行中') return 'warning'
+  return 'success'
+}
 </script>
 
 <template>
@@ -85,13 +90,6 @@ const activity = [
   </div>
 </template>
 
-<script lang="ts">
-function eventTagType(state: string) {
-  if (state === '告警') return 'danger'
-  if (state === '运行中') return 'warning'
-  return 'success'
-}
-</script>
 
 <style scoped>
 .overview-grid {
