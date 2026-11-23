@@ -186,7 +186,7 @@ function drawMarkers() {
   if (!scene) return
   const group = new THREE.Group()
   for (const robot of props.robotMarkers || []) {
-    const color = robot.state === 'offline' ? '#FF6B5A' : '#62E6D0'
+    const color = robot.state === 'offline' ? '#FF6B5A' : robot.state === 'degraded' ? '#E5B85C' : '#62E6D0'
     const halo = new THREE.Mesh(
       new THREE.CircleGeometry(.34, 28),
       new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .2 }),
