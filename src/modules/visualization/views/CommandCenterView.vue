@@ -2,6 +2,8 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import './command-center.css'
+import './command-center-panels.css'
+import './command-center-map.css'
 
 const DESIGN_WIDTH = 1920
 const DESIGN_HEIGHT = 1080
