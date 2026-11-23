@@ -21,6 +21,7 @@ export class MqttGatewayClient {
   private connectTimer: ReturnType<typeof setTimeout> | null = null
   private connectPromise: Promise<void> | null = null
   private manuallyClosed = true
+  private authRejected = false
 
   constructor(private readonly ticketProvider: TicketProvider = requestMqttTicket) {}
 
@@ -30,7 +31,7 @@ export class MqttGatewayClient {
 
   onStateChange(handler: MqttStateHandler): () => void {
     this.stateHandlers.add(handler)
-    handler(this.snapshot)
+    try { handler(this.snapshot) } catch { /* Isolate observer failures. */ }
     return () => this.stateHandlers.delete(handler)
   }
 
@@ -44,7 +45,9 @@ export class MqttGatewayClient {
   }
 
   async connect(): Promise<void> {
+    const startingManually = this.manuallyClosed
     this.manuallyClosed = false
+    if (startingManually) this.authRejected = false
     this.clearTimer('reconnect')
     if (this.client?.connected) return
     if (this.connectPromise) return this.connectPromise
@@ -59,9 +62,11 @@ export class MqttGatewayClient {
       ticket = await this.ticketProvider()
       this.validateTicket(ticket)
     } catch (error) {
-      const message = error instanceof Error ? error.message : '无法获取 MQTT 连接凭证'
+      const denied = error instanceof ApiError && [401, 403].includes(error.status)
+      this.authRejected = denied
+      const message = denied ? 'MQTT ticket 被后端拒绝，请重新登录或检查权限' : '无法获取 MQTT 连接凭证'
       this.setState('error', message)
-      if (!(error instanceof ApiError && [401, 403].includes(error.status))) this.scheduleReconnect()
+      if (!denied) this.scheduleReconnect()
       throw error
     }
 
@@ -78,6 +83,7 @@ export class MqttGatewayClient {
         reconnectOnConnackError: false,
         resubscribe: false,
         protocolVersion: 5,
+        queueQoSZero: false,
       })
       this.client = client
 
@@ -96,6 +102,7 @@ export class MqttGatewayClient {
 
       client.on('connect', () => {
         if (this.manuallyClosed) { client.end(true); settle(new Error('MQTT 连接已取消')); return }
+        this.authRejected = false
         this.reconnectAttempt = 0
         this.setState('connected')
         this.subscribeAll(client)
@@ -108,7 +115,11 @@ export class MqttGatewayClient {
       })
 
       client.on('error', error => {
-        this.setState('error', 'MQTT 连接发生错误，请检查网关和凭证')
+        this.authRejected = isAuthenticationFailure(error)
+        const message = this.authRejected
+          ? 'MQTT Broker 拒绝连接，请检查账号权限和 Topic ACL'
+          : 'MQTT 连接发生错误，请检查网关和网络'
+        this.setState('error', message)
         settle(error)
       })
 
@@ -116,7 +127,9 @@ export class MqttGatewayClient {
         if (this.client === client) this.client = null
         this.clearTimer('ticket')
         if (!settled) settle(new Error('MQTT 连接在握手完成前关闭'))
-        if (!this.manuallyClosed) {
+        if (this.authRejected) {
+          this.setState('error', 'MQTT 认证或 Topic ACL 被拒绝，等待人工处理')
+        } else if (!this.manuallyClosed) {
           this.setState('reconnecting', 'MQTT 连接已断开')
           this.scheduleReconnect()
         } else {
@@ -125,7 +138,7 @@ export class MqttGatewayClient {
       })
 
       client.on('offline', () => {
-        if (!this.manuallyClosed) this.setState('reconnecting', 'MQTT 网络暂时不可用')
+        if (!this.manuallyClosed && !this.authRejected) this.setState('reconnecting', 'MQTT 网络暂时不可用')
       })
     })
   }
@@ -146,14 +159,14 @@ export class MqttGatewayClient {
   }
 
   private dispatchMessage(topic: string, bytes: Uint8Array, qos: MqttQos, retain: boolean) {
-    let payload: unknown
     const raw = new TextDecoder().decode(bytes)
+    let payload: unknown
     try { payload = JSON.parse(raw) as unknown } catch { payload = raw }
     const event: MqttIncomingMessage = { topic, payload, receivedAt: Date.now(), qos, retain }
     for (const [filter, subscription] of this.subscriptions) {
       if (!topicMatches(filter, topic)) continue
       for (const handler of subscription.handlers) {
-        try { handler(event) } catch { /* A feature callback must not interrupt MQTT dispatch. */ }
+        try { handler(event) } catch { /* Feature callbacks must not interrupt MQTT dispatch. */ }
       }
     }
   }
@@ -185,16 +198,18 @@ export class MqttGatewayClient {
 
   publish(topic: string, payload: unknown, qos: MqttQos = 0): Promise<void> {
     validateTopic(topic, false)
-    if (!this.client?.connected || this.state !== 'connected') return Promise.reject(new Error('MQTT 尚未连接'))
+    const client = this.client
+    if (!client?.connected || this.state !== 'connected') return Promise.reject(new Error('MQTT 尚未连接'))
     const encoded = typeof payload === 'string' ? payload : JSON.stringify(payload)
     if (encoded === undefined) return Promise.reject(new Error('MQTT payload 无法序列化'))
     return new Promise((resolve, reject) => {
-      this.client?.publish(topic, encoded, { qos, retain: false }, error => error ? reject(error) : resolve())
+      client.publish(topic, encoded, { qos, retain: false }, error => error ? reject(error) : resolve())
     })
   }
 
   async disconnect(): Promise<void> {
     this.manuallyClosed = true
+    this.authRejected = false
     this.clearTimer('reconnect')
     this.clearTimer('ticket')
     this.clearTimer('connect')
@@ -215,7 +230,7 @@ export class MqttGatewayClient {
   }
 
   private scheduleReconnect() {
-    if (this.manuallyClosed || this.reconnectTimer) return
+    if (this.manuallyClosed || this.authRejected || this.reconnectTimer) return
     const base = Math.min(30_000, 1_000 * (2 ** Math.min(this.reconnectAttempt, 5)))
     const delay = Math.round(base * (0.8 + Math.random() * 0.4))
     this.reconnectAttempt += 1
@@ -231,7 +246,7 @@ export class MqttGatewayClient {
     const renewIn = Math.max(1_000, remaining - 15_000)
     this.ticketTimer = setTimeout(() => {
       if (this.client !== client || this.manuallyClosed) return
-      client.end(true) // close event obtains a fresh, narrower ticket before reconnecting
+      client.end(true)
     }, renewIn)
   }
 
@@ -244,6 +259,10 @@ export class MqttGatewayClient {
   }
 }
 
+function isAuthenticationFailure(error: Error): boolean {
+  return /not authorized|unauthori[sz]ed|bad user(name)? or password|bad credentials|access denied/i.test(error.message)
+}
+
 function validateTopic(topic: string, allowWildcards: boolean) {
   if (!topic || topic.length > 512 || /[\u0000-\u0020]/.test(topic)) throw new Error('MQTT Topic 无效')
   if (!allowWildcards && /[+#]/.test(topic)) throw new Error('发布 Topic 不允许使用通配符')
@@ -253,11 +272,11 @@ function validateTopic(topic: string, allowWildcards: boolean) {
 
 function topicMatches(filter: string, topic: string): boolean {
   if (topic.startsWith('$') && (filter.startsWith('#') || filter.startsWith('+'))) return false
-  const f = filter.split('/')
-  const t = topic.split('/')
-  for (let i = 0; i < f.length; i++) {
-    if (f[i] === '#') return i === f.length - 1
-    if (i >= t.length || (f[i] !== '+' && f[i] !== t[i])) return false
+  const filters = filter.split('/')
+  const levels = topic.split('/')
+  for (let index = 0; index < filters.length; index++) {
+    if (filters[index] === '#') return index === filters.length - 1
+    if (index >= levels.length || (filters[index] !== '+' && filters[index] !== levels[index])) return false
   }
-  return f.length === t.length
+  return filters.length === levels.length
 }
