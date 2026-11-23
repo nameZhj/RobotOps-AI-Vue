@@ -13,17 +13,18 @@ const pointCloudName = ref('')
 const parsedPgm = ref<ReturnType<typeof parsePgm> | null>(null)
 const yamlMetadata = ref<MapYamlMetadata | null>(null)
 const metadataHint = ref('请同时导入配套 YAML，避免使用猜测的地图分辨率和原点。')
-function applyMapPackage() {
-  if (!parsedPgm.value || !yamlMetadata.value) return
+function applyMapPackage(): 'waiting' | 'mismatch' | 'applied' {
+  if (!parsedPgm.value || !yamlMetadata.value) return 'waiting'
   const meta = yamlMetadata.value
   const expectedImage = meta.imagePath?.replace(/\\/g, '/').split('/').pop()
   if (expectedImage && mapName.value && expectedImage !== mapName.value) {
     grid.value = null
     metadataHint.value = `YAML 指向 ${expectedImage}，当前文件是 ${mapName.value}，请确认地图文件配对。`
-    return
+    return 'mismatch'
   }
   grid.value = createGrid(parsedPgm.value, meta.resolution, meta.origin, { negate: meta.negate, frameId: meta.frameId })
   metadataHint.value = `坐标系 ${meta.frameId} · ${meta.resolution} m/px`
+  return 'applied'
 }
 async function onPcd(event: Event) {
   const input = event.target as HTMLInputElement
@@ -46,11 +47,11 @@ async function onFile(event: Event) {
     if (file.size > 64 * 1024 * 1024) throw new Error('PGM 文件超过 64MB 限制')
     grid.value = null
     parsedPgm.value = null
-    metadataHint.value = 'PGM 已选择，请导入与它对应的 YAML 文件。'
+    yamlMetadata.value = null
+    metadataHint.value = 'PGM 已选择，请重新导入与它对应的 YAML 文件。'
     mapName.value = file.name
     parsedPgm.value = parsePgm(await file.arrayBuffer())
-    applyMapPackage()
-    if (!yamlMetadata.value) metadataHint.value = 'PGM 已解析，请继续导入对应 YAML 获取准确分辨率和原点。'
+    metadataHint.value = 'PGM 已解析，请继续导入对应 YAML 获取准确分辨率和原点。'
   } catch (e) { error.value = e instanceof Error ? e.message : '地图解析失败' }
   finally { input.value = '' }
 }
@@ -62,10 +63,9 @@ async function onYaml(event: Event) {
   try {
     grid.value = null
     yamlMetadata.value = parseMapYaml(await file.text())
-    applyMapPackage()
-    if (grid.value) metadataHint.value = `已加载 ${file.name} · ${yamlMetadata.value.resolution} m/px`
-    else if (parsedPgm.value) metadataHint.value = 'YAML 已加载，但地图配对未通过校验。'
-    else metadataHint.value = `已加载 ${file.name}，等待导入 PGM。`
+    const result = applyMapPackage()
+    if (result === 'applied') metadataHint.value = `已加载 ${file.name} · ${yamlMetadata.value.resolution} m/px`
+    else if (result === 'waiting') metadataHint.value = `已加载 ${file.name}，等待导入 PGM。`
   } catch (e) { error.value = e instanceof Error ? e.message : 'YAML 解析失败' }
   finally { input.value = '' }
 }
