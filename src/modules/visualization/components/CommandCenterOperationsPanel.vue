@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { DeviceSummary } from '@/modules/devices/types'
 
-defineProps<{ devices: DeviceSummary[]; demo: boolean; loading: boolean }>()
+const props = defineProps<{ devices: DeviceSummary[]; demo: boolean; loading: boolean }>()
+const onlineCount = computed(() => props.devices.filter(device => device.connection === 'online').length)
 const patrolStats = [
   { label: '巡检点位', value: '14' },
   { label: '已完成', value: '11' },
@@ -29,7 +31,7 @@ function batteryTone(value: number | null) {
     <section class="screen-panel device-panel">
       <div class="panel-heading">
         <h2>设备状态</h2>
-        <span class="panel-counter">{{ devices.filter(item => item.connection === 'online').length }} / {{ devices.length }} 在线</span>
+        <span class="panel-counter">{{ onlineCount }} / {{ devices.length }} 在线</span>
       </div>
       <div v-if="loading && devices.length === 0" class="panel-empty">正在读取设备状态…</div>
       <div v-else-if="devices.length === 0" class="panel-empty">暂无设备数据</div>
