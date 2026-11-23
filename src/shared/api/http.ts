@@ -138,7 +138,10 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     return await execute<T>(normalizedPath, init, timeoutMs, token)
   } catch (error) {
     if (!(error instanceof ApiError) || error.status !== 401 || !auth || AUTH_ENDPOINTS.has(endpointPath)) throw error
-    const refreshed = await refreshAccessToken(timeoutMs)
+    const latestToken = tokenStore.get()
+    const refreshed = latestToken && latestToken !== token
+      ? latestToken
+      : await refreshAccessToken(timeoutMs)
     if (!refreshed) {
       tokenStore.clear()
       if (typeof window !== 'undefined') window.dispatchEvent(new Event('robotops:session-expired'))
