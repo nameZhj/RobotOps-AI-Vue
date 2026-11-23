@@ -16,7 +16,7 @@
 | src/modules/maps/yaml-metadata.ts | MapYamlMetadata, parseMapYaml |
 | src/modules/tasks/api.ts | taskApi |
 | src/modules/tasks/types.ts | TaskState, TaskSummary |
-| src/modules/visualization/views/CommandCenterView.vue | fixed-canvas scale and ResizeObserver |
+| src/modules/visualization/views/CommandCenterView.vue | fixed 16:9 canvas, uniform scale, ResizeObserver and viewport/fullscreen listeners |
 | src/modules/visualization/views/command-center.css | 1920×1080 canvas styles |
 | src/platform/robot/mock-robot-adapter.ts | MockRobotAdapter |
 | src/platform/robot/robot-adapter.ts | RobotTelemetry, RobotAdapter |
