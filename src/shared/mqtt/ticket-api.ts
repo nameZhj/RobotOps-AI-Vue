@@ -1,7 +1,12 @@
 import { http } from '@/shared/api/http'
 import type { MqttConnectTicket } from './types'
 
-/** The backend validates the user session and issues credentials limited to allowed topics/devices. */
+/** The backend validates the session and issues a short-lived, topic-scoped ticket. */
 export function requestMqttTicket(): Promise<MqttConnectTicket> {
-  return http.post<MqttConnectTicket>('/realtime/mqtt-ticket')
+  const idempotencyKey = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `mqtt-ticket-${Date.now()}-${Math.random().toString(16).slice(2)}`
+  return http.post<MqttConnectTicket>('/realtime/mqtt-ticket', {}, {
+    headers: { 'Idempotency-Key': idempotencyKey },
+  })
 }
