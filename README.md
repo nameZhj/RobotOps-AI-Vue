@@ -4,19 +4,19 @@
 
 ## 设计目标
 
-1. **Agent-first**：先读 `AGENTS.md` 和 `.agent/INDEX.md` 即可定位模块；每个业务能力按垂直切片组织，避免跨层猜测。
-2. **低上下文成本**：单文件单职责；代码文件建议 150 行以内、硬上限 250 行；公共契约集中维护；避免 barrel 文件和隐式魔法。
-3. **协议与设备解耦**：页面只依赖应用服务和类型化适配器，不直接拼 MQTT Topic、ROS 消息或设备 HTTP 地址。
-4. **安全边界清晰**：用户登录、机器人 SSH 凭证、设备 License 三套身份体系分离；浏览器不持久化长期密钥。
-5. **先 Mock 后真机**：默认 Mock 适配器可离线启动；真实后端通过 API/WS 适配器接入。
+1. **Agent-first**：先读 `AGENTS.md` 和 `.agent/INDEX.md` 即可定位模块；按业务垂直切片组织，避免跨层猜测。
+2. **低上下文成本**：单文件单职责；目标 150 行，硬上限 250 行；用稳定 DTO、短 README 和自动符号索引定位代码。
+3. **协议与设备解耦**：页面不直接拼 MQTT Topic、ROS 消息或设备 HTTP 地址。
+4. **安全边界清晰**：平台登录、机器人 SSH 凭证、设备 License 分离；浏览器不持久化长期密钥。
+5. **先 Mock 后真机**：可离线演示，但所有模拟状态都明确标记。
 
 ## 技术栈
 
-- Vue 3、TypeScript、Vite 8（需要 Node.js 20.19+ 或 22.12+）
-- Vue Router、Pinia、Element Plus
-- Three.js：3D 场景、点云和模型渲染
-- ECharts：运营大屏和趋势图
-- Vitest：单元测试
+- Vue 3 + TypeScript + Vite 8
+- Vue Router + Pinia + Element Plus
+- Three.js：地图、点云和模型可视化
+- MQTT.js：MQTT over WSS 浏览器通信
+- ECharts：可视化大屏图表（后续数据接入）
 
 ## 快速开始
 
@@ -26,23 +26,31 @@ cp .env.example .env.local
 npm run dev
 ```
 
-默认 `VITE_AUTH_MODE=mock`，只用于本地 UI 开发，不提供真实安全认证。生产环境必须使用 `VITE_AUTH_MODE=api`，并配置后端认证 API。
+默认 `VITE_AUTH_MODE=mock`，仅用于本地界面开发。生产环境使用 `VITE_AUTH_MODE=api` 并配置后端认证服务。
 
-## 发布到 GitHub
+## 网络基础设施
 
-本项目使用独立仓库 `nameZhj/RobotOps-AI-Vue`，不依赖或修改其他旧仓库。需要本机已安装 Git、GitHub CLI（`gh`）并完成 `gh auth login`。
+### HTTP
 
-```powershell
-# Windows PowerShell
-.\scripts\publish-to-github.ps1 -Visibility public
-```
+统一入口：`src/shared/api/http.ts`。
 
-```bash
-# macOS / Linux
-bash scripts/publish-to-github.sh
-```
+具备 15 秒默认超时、AbortSignal 取消、统一 ApiError、204/205 空响应、并发 401 single-flight refresh。GET/HEAD/OPTIONS 可在刷新后重试；写请求必须携带 `Idempotency-Key` 才会自动重放。不会盲目重试任务创建或控制命令。
 
-如果仓库已经存在，脚本会设置 `origin` 并推送到 `main`；如果不存在，则先创建再推送。
+详细契约：`docs/contracts/http-client.md`。
+
+### MQTT
+
+统一入口：`src/shared/mqtt/client.ts`。
+
+只使用 MQTT over WSS。前端先通过登录态调用后端 `POST /api/realtime/mqtt-ticket` 获取短时、受 Topic ACL 限制的凭证；客户端负责连接状态、keepalive、重连退避、凭证续签、订阅恢复和 disposer。禁止在前端写死 Broker 账号密码。
+
+详细契约：`docs/contracts/mqtt-gateway.md`。
+
+## 响应式与可访问性
+
+支持 320px 起的窄屏、平板、桌面和超宽显示器。布局优先使用 `clamp()`、`minmax(0, 1fr)`、`min-width: 0` 和局部滚动，不通过挤压文字来适配。统一颜色 Token、按钮状态、焦点样式和文字对比度。
+
+正常文字与背景以 WCAG 2.2 AA 4.5:1 为目标；状态不只靠颜色表达。规范见 `AGENTS.md` 第 3 节。
 
 ## 常用命令
 
@@ -50,48 +58,44 @@ bash scripts/publish-to-github.sh
 npm run dev          # 本地开发
 npm run typecheck    # TypeScript 检查
 npm run build        # 生产构建
-npm run ai:index     # 重建 Agent 模块索引
-npm test             # 单元测试
+npm run ai:index     # 更新 Agent 符号索引
 ```
+
+本仓库不保留单元测试文件；改动通过 typecheck、production build 和模块 smoke checklist 验证。
 
 ## 目录导航
 
 | 路径 | 职责 |
 |---|---|
-| `src/modules/` | 业务垂直切片：auth、dashboard、devices、maps、tasks、visualization、logs |
-| `src/shared/` | 无业务归属的基础能力：HTTP、权限、实时通道、通用 UI |
-| `src/platform/` | 机器人协议、地图渲染、第三方 SDK 适配器 |
-| `src/app/` | 应用组装：入口、路由、全局 Provider |
-| `docs/contracts/` | 前后端共享 DTO、状态机和协议契约 |
-| `.agent/` | Agent 索引、规则和任务工作流 |
+| `src/modules/` | auth、dashboard、devices、maps、tasks、visualization、logs |
+| `src/shared/api/` | HTTP 请求、刷新、错误 |
+| `src/shared/mqtt/` | MQTT ticket、WSS 客户端和订阅 |
+| `src/shared/auth/` | Token 与权限 |
+| `src/platform/` | 机器人协议适配器 |
+| `src/styles/` | 颜色、排版、响应式与 Element Plus 主题 |
+| `docs/contracts/` | 前后端 HTTP、MQTT、地图、遥测和任务契约 |
+| `.agent/` | Agent 索引 |
 
 ## Agent 开发入口
 
-**先读：** `AGENTS.md` → `.agent/INDEX.md` → 对应模块 `README.md` → 目标文件。
+**先读：** `AGENTS.md` → `.agent/INDEX.md` → 模块 README → 目标文件。
 
-新增功能复制 `docs/templates/feature.template.md`，不要先扫描整个仓库。完成后运行 `npm run typecheck && npm run build`，并更新 `.agent/INDEX.md`。
+新增模块必须更新 `.agent/INDEX.md` 和 `.agent/SOURCE_INDEX.md`。不要先扫描全仓库或输出重复的大段文档。
 
-## 功能范围与实现边界
+## 当前实现边界
 
-- 登录与轻量 RBAC 权限控制（前端仅负责体验，后端必须再次鉴权）
-- 设备管理：机器人、机械狗、AGV 统一设备模型
-- 地图管理：配套 PGM + ROS YAML 元数据、PCD 点云基础预览、坐标转换、路网节点和边契约
-- 任务管理：任务列表和状态查看；调度命令 API 待接入
-- 可视化大屏：当前提供 UI 框架与演示数据，真实指标需接入聚合 API
-- 日志管理：当前提供查询 UI 示例，后续接入分页 API 与导出
+当前已有应用壳、登录与 RBAC UI、设备/任务/日志页面、PGM P2/P5、ROS YAML 子集、地图坐标转换、PCD 预览、基础大屏、共享 HTTP 客户端和 MQTT WSS 客户端。
 
-首版包含应用壳、认证与 RBAC、设备和任务列表、PGM P2/P5 解析、ROS YAML 子集解析、坐标转换、PCD 基础预览、Three.js 资源释放和 Agent 工程规范。PCD Worker/LOD、URDF 关节模型、地图路网交互编辑、真实 WebSocket 与后端 API 仍在路线图中。
+真实用户/设备 API、MQTT ticket 后端和 Broker ACL、WebSocket telemetry aggregation、地图路网编辑器、PCD Worker/LOD、URDF 关节模型仍需后端与后续模块配合。演示数据不代表真实设备状态。
 
-## 重要安全说明
+## 安全规则
 
-- `localStorage` / `sessionStorage` 不保存 access token、refresh token、SSH 密码、MQTT 密码或 License 私钥。
-- access token 默认只放内存；refresh token 应由后端以 `HttpOnly; Secure; SameSite` Cookie 管理。
-- 机器人 SSH 凭证必须由后端保管并加密，浏览器只提交到受保护的凭证登记接口，不可回显。
-- MQTT 真实接入优先由后端网关转发；禁止在前端写入共享 Broker 用户名/密码。
-- 前端路由权限不是安全边界，所有 API 都必须由服务端进行 RBAC / ABAC 校验。
-- License 必须由后端做真实数字签名验签，不能只比较机器码。
-- Mock 登录绝不能部署到生产环境。
+- access token 仅驻留内存；refresh token 由后端 HttpOnly Cookie 管理。
+- SSH 凭证由后端密钥库保管；MQTT 使用后端签发的短时凭证。
+- 禁止将密钥放入 localStorage、sessionStorage、URL、日志或前端环境变量。
+- 前端权限只控制展示，后端必须独立执行 RBAC/ABAC。
+- License 必须后端真实数字签名验签，不能只比较机器码。
 
-## 仓库状态
+## GitHub
 
-当前为独立前端初始框架，不包含真实机器人后端或运动控制闭环。所有演示指标均不代表真实设备状态。后续实现顺序见 `docs/roadmap.md`。
+独立仓库：<https://github.com/nameZhj/RobotOps-AI-Vue>
