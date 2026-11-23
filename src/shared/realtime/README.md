@@ -1,3 +1,5 @@
 # Realtime transport
 
-WebSocket/SSE connection lifecycle belongs here. Normalize server events before exposing them to modules. Include reconnect backoff, heartbeat timeout, message schema validation, sequence-gap detection and unsubscribe cleanup. Never include Broker shared credentials in frontend configuration.
+MQTT over WSS is implemented in `src/shared/mqtt/`. This folder is reserved for authenticated WebSocket/SSE transport where the backend does not expose MQTT to browsers.
+
+Both transports must normalize events, validate schemas, expose connection state, detect stale timestamps/sequence gaps, and return unsubscribe disposers. Never include Broker shared credentials in frontend configuration.
