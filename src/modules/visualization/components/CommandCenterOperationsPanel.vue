@@ -95,7 +95,7 @@ function batteryTone(value: number | null) {
           </div>
         </article>
       </div>
-      <span class="data-caption event-caption">事件图片与点位为演示内容，待接入巡检事件 API</span>
+      <span class="data-caption event-caption">事件与点位缩略图为演示内容，待接入事件媒体 API</span>
     </section>
   </div>
 </template>
