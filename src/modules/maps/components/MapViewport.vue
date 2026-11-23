@@ -1,3 +1,4 @@
+<script setup lang="ts">
 import { onBeforeUnmount, onMounted, watch, ref } from 'vue'
 import * as THREE from 'three'
 import { PCDLoader } from 'three/addons/loaders/PCDLoader.js'
