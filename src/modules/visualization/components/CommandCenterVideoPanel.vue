@@ -34,6 +34,7 @@ function onPlaybackError() {
         v-if="playing && streamUrl"
         :src="streamUrl"
         autoplay
+        preload="none"
         muted
         controls
         playsinline
