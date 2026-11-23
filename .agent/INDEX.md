@@ -35,6 +35,11 @@
 - Tasks: `docs/contracts/task-state.md`
 - Adapter: `docs/robot-adapter.md`
 
+## Validation
+
+- `docs/manual-smoke-check.md`
+- `npm run typecheck` and `npm run build`
+
 ## Known limitations
 
 - PGM requires paired ROS YAML; interactive route graph editor and persistence remain incomplete.
