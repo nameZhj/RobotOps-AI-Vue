@@ -22,7 +22,8 @@ Preferred alternative for restricted deployments: broker remains private and bac
 
 Contract rules:
 - Backend authenticates the HttpOnly session / Bearer access token.
-- Ticket lifetime should be short (recommended 1-5 minutes), revocable, single-session and scoped to tenant/site/device/topic ACL.
+- Ticket lifetime should be short (recommended 1-5 minutes), revocable, session-scoped and limited to tenant/site/device/topic ACL.
+- Ticket endpoint accepts `Idempotency-Key`; the same key returns the same ticket during the short deduplication window so the HTTP client can safely replay after session refresh.
 - Broker must enforce topic ACL server-side; never trust the browser to constrain topics.
 - WSS only. Do not embed credentials in URL query/path or frontend environment variables.
 - Ticket credentials exist in memory only and are replaced on reconnect/renewal.
