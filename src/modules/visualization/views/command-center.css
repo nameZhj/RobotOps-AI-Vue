@@ -148,6 +148,7 @@ body.visualization-mode #app {
 }
 .grid-bg {
   position: absolute;
+  z-index: 0;
   inset: 0;
   transform: perspective(700px) rotateX(16deg) scale(1.12);
   background-image:
@@ -157,6 +158,7 @@ body.visualization-mode #app {
 }
 .robot {
   position: absolute;
+  z-index: 2;
   min-width: 106px;
   padding: 10px 12px;
   border: 1px solid #9bd7ff;
@@ -174,6 +176,7 @@ body.visualization-mode #app {
 .r4 { top: 20%; left: 76%; background: #573b74; }
 .route {
   position: absolute;
+  z-index: 1;
   top: 27%;
   left: 20%;
   width: 55%;
