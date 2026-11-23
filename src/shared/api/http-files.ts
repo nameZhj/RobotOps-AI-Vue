@@ -4,7 +4,6 @@ import {
   ApiError,
   DEFAULT_TIMEOUT_MS,
   canReplay,
-  execute,
   executeBlob,
   normalizePath,
   notifySessionExpired,
@@ -50,18 +49,4 @@ export async function downloadFile(
     }
     return executeBlob(normalizedPath, init, timeoutMs, refreshed)
   }
-}
-
-/** Upload a JSON metadata object separately when a map package uses multipart assets. */
-export async function uploadJson<T>(
-  path: string,
-  value: unknown,
-  options: RequestOptions = {},
-): Promise<T> {
-  const { timeoutMs = DEFAULT_TIMEOUT_MS, ...init } = options
-  return execute<T>(normalizePath(path), {
-    ...init,
-    method: options.method || 'POST',
-    body: JSON.stringify(value),
-  }, timeoutMs, tokenStore.get())
 }
