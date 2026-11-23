@@ -29,6 +29,11 @@ const kindNames: Record<DeviceSummary['kind'], string> = {
   'mobile-manipulator': '移动操作机器人',
   other: '其他',
 }
+
+function kindLabel(value: unknown): string {
+  if (typeof value !== 'string' || !(value in kindNames)) return kindNames.other
+  return kindNames[value as DeviceSummary['kind']]
+}
 </script>
 
 <template>
@@ -50,7 +55,7 @@ const kindNames: Record<DeviceSummary['kind'], string> = {
           <el-table-column prop="name" label="设备名称" min-width="170" />
           <el-table-column label="类型" width="140">
             <template #default="scope">
-              {{ kindNames[scope.row.kind] }}
+              {{ kindLabel(scope.row.kind) }}
             </template>
           </el-table-column>
           <el-table-column prop="model" label="型号" width="120" />
