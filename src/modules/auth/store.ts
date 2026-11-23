@@ -25,17 +25,19 @@ export const useAuthStore = defineStore('auth', () => {
       tokenStore.set(result.accessToken)
       user.value = result.user
     } catch {
-      tokenStore.clear()
-      user.value = null
+      clearSession()
     }
   }
+  function clearSession() {
+    tokenStore.clear()
+    user.value = null
+    ready.value = true
+  }
   async function logout() {
-    try { await authApi.logout() } finally {
-      tokenStore.clear(); user.value = null; ready.value = true
-    }
+    try { await authApi.logout() } finally { clearSession() }
   }
   function hasPermission(permission: Permission) {
     return Boolean(user.value && can(user.value.permissions, permission))
   }
-  return { user, ready, isAuthenticated, login, restoreSession, logout, hasPermission }
+  return { user, ready, isAuthenticated, login, restoreSession, clearSession, logout, hasPermission }
 })
