@@ -1,3 +1,4 @@
+import { tokenStore } from '@/shared/auth/token-store'
 import {
   AUTH_ENDPOINTS,
   ApiError,
@@ -23,7 +24,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const { timeoutMs = DEFAULT_TIMEOUT_MS, auth = true, ...init } = options
   const method = (init.method || 'GET').toUpperCase()
   const headers = new Headers(init.headers)
-  const token = auth ? (await import('@/shared/auth/token-store')).tokenStore.get() : null
+  const token = auth ? tokenStore.get() : null
 
   try {
     return await execute<T>(normalizedPath, init, timeoutMs, token)
