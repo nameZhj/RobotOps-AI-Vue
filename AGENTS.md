@@ -24,16 +24,16 @@
 - 模块之间只通过公开 DTO、service/API 契约调用，禁止跨模块深入 import 内部实现。
 - 不新增没有真实用途的抽象、注册中心、事件总线或全局单例。
 - 不把大型 PCD、日志全文或高频遥测常驻 Pinia；使用分页、分块、Worker 和时间窗。
-- 不创建无明确价值的测试文件、fixture 或重复文档；本仓库采用 typecheck/build 和可复现的手工 smoke checklist，不新增单元测试文件。
+- 本仓库不新增单元测试文件、fixture 或重复测试配置；用 typecheck/build 和短 smoke checklist 验证。
 
 ## 3. 响应式 UI 与可访问性
 
 - 不得在 `html/body/#app` 设置大于 320px 的全局最小宽度；页面必须能在 320px 到超宽屏工作。
-- 优先使用 `clamp()`、`minmax(0, 1fr)`、`min-width: 0`、`max-width: 100%` 和容器内滚动，禁止依靠挤压文字解决布局问题。
-- Flex/Grid 的子项默认显式设置 `min-width: 0`；长 ID/路径用省略号或可换行展示；代码、数值、时间戳使用局部横向滚动。
-- 不用固定像素宽度/高度控制主要布局；固定值仅用于图标、按钮最小触控高度和已知硬件画布边界。
+- 优先使用 `clamp()`、`minmax(0, 1fr)`、`min-width: 0`、`max-width: 100%` 和容器内滚动，禁止通过挤压文字来适配。
+- Flex/Grid 子项显式设置 `min-width: 0`；长 ID/路径用省略号或可换行展示；代码、数值、时间戳使用局部横向滚动。
+- 不用固定像素宽度/高度控制主要布局；固定值仅用于图标、按钮最小触控高度和已知画布边界。
 - 全局颜色必须使用 `src/styles/tokens.css`；普通文字与背景目标对比度至少 4.5:1，大字号至少 3:1。状态不能只靠颜色区分，必须同时有文字/图标。
-- 按钮统一使用 Element Plus 全局按钮样式：内容水平/垂直居中、稳定内边距、明确 hover/focus/active/disabled 状态；禁止压缩按钮或让文本贴边。
+- 按钮统一使用 Element Plus 全局按钮样式：内容水平/垂直居中、稳定内边距、明确 hover/focus/active/disabled 状态；禁止压缩按钮或让文字贴边。
 - 检查键盘焦点、200% 文字放大、窄屏横向溢出和 reduced-motion。依据 WCAG 2.2 AA。
 
 ## 4. 机器人安全规则
@@ -64,7 +64,7 @@
 - 变更范围最小、命名与模块契约一致；同步更新 `.agent/INDEX.md` 和 `.agent/SOURCE_INDEX.md`。
 - 更新对应模块 README 和 `docs/contracts/`，不要在多个文档复制同一长段实现细节。
 - 运行 `npm run typecheck`、`npm run build`；无法运行时明确报告，不得宣称通过。
-- 无测试文件要求；用 typecheck/build、文件级逻辑审查和可复现手工 smoke checklist 验证。
+- 按 `docs/manual-smoke-check.md` 进行人工验证；不要新建测试目录或测试框架。
 - 检查响应式边界、文字对比度、布局溢出、错误/loading/empty 状态及资源释放。
 
 ## 8. 禁止事项
@@ -73,4 +73,4 @@
 - 禁止为了“通用”而创建过度抽象的 BaseManager / BaseService。
 - 禁止将模拟设备、模拟运行状态当作真实设备数据。
 - 禁止在前端存储或暴露机器人 SSH、MQTT、数据库、License 签名私钥。
-- 禁止在生产环境启用 Mock 身份、非 TLS MQTT 或无 ACL 的公共 topic。
+- 禁止在生产环境启用 Mock 身份、非 TLS MQTT 或无 ACL 的公共 Topic。
