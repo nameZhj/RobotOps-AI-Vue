@@ -1,0 +1,16 @@
+ :root {
+  color-scheme: dark;
+  --bg: #0b1020;
+  --surface: #111a2c;
+  --surface-raised: #172238;
+  --surface-soft: #1d2a42;
+  --line: rgba(169, 190, 220, .13);
+  --text: #e8eef8;
+  --muted: #8fa1ba;
+  --primary: #58a6ff;
+  --success: #34c98b;
+  --warning: #f6b84a;
+  --danger: #ff647c;
+  --sidebar-width: 224px;
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
