@@ -20,6 +20,12 @@ describe('parseMapYaml', () => {
     })
   })
 
+  it('accepts quoted scalar values and image paths', () => {
+    const result = parseMapYaml(valid.replace('warehouse.pgm', '"maps/warehouse.pgm"').replace('0.05', '"0.05"'))
+    expect(result.resolution).toBe(0.05)
+    expect(result.imagePath).toBe('maps/warehouse.pgm')
+  })
+
   it('supports explicit negate and frame metadata', () => {
     const result = parseMapYaml(`${valid}frame_id: map_floor_1\nnegate: 1\n`)
     expect(result.negate).toBe(true)
@@ -28,9 +34,9 @@ describe('parseMapYaml', () => {
 
   it('rejects missing or invalid coordinate metadata', () => {
     expect(() => parseMapYaml('resolution: 0.05\n')).toThrow()
-    expect(() => parseMapYaml(valid.replace('resolution: 0.05', 'resolution: -1'))).toThrow()
-    expect(() => parseMapYaml(valid.replace('origin: [-1.2, 3.4, 1.570796]', 'origin: [0, 0]'))).toThrow()
-    expect(() => parseMapYaml(valid.replace('origin: [-1.2, 3.4, 1.570796]', 'origin: [0, , 1]'))).toThrow()
+    expect(() => parseMapYaml(`${valid.replace('resolution: 0.05', 'resolution: -1')}`)).toThrow()
+    expect(() => parseMapYaml(`${valid.replace('origin: [-1.2, 3.4, 1.570796]', 'origin: [0, 0]')}`)).toThrow()
+    expect(() => parseMapYaml(`${valid.replace('origin: [-1.2, 3.4, 1.570796]', 'origin: [0, , 1]')}`)).toThrow()
   })
 
   it('rejects invalid occupancy thresholds', () => {
