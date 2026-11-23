@@ -100,7 +100,6 @@ function drawMap() {
   mapMesh.position.set(center.x, center.y, 0)
   mapMesh.rotation.z = grid.origin.yaw
   scene.add(mapMesh)
-
   const corners = [gridPoint(grid, 0, 0), gridPoint(grid, mapWidth, 0), gridPoint(grid, 0, mapHeight), gridPoint(grid, mapWidth, mapHeight)]
   mapBounds = {
     minX: Math.min(...corners.map(p => p.x)), maxX: Math.max(...corners.map(p => p.x)),
@@ -119,9 +118,7 @@ function drawRoutes() {
   for (const edge of props.routes?.edges || []) {
     const from = nodes.get(edge.from), to = nodes.get(edge.to)
     if (!from || !to) continue
-    const geometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(from.x, from.y, .025), new THREE.Vector3(to.x, to.y, .025),
-    ])
+    const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(from.x, from.y, .025), new THREE.Vector3(to.x, to.y, .025)])
     group.add(new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: '#33c7a5' })))
   }
   for (const node of nodes.values()) {
@@ -205,7 +202,8 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.viewport{height:480px;position:relative;overflow:hidden;border-radius:8px;background:#0a1220}
+.viewport{width:100%;height:clamp(280px,58vh,720px);min-height:280px;position:relative;overflow:hidden;border-radius:8px;background:#0a1220}
 .viewport canvas{display:block;width:100%;height:100%}
-.empty{position:absolute;inset:0;display:grid;place-items:center;color:#74849b;font-size:13px;pointer-events:none}
+.empty{position:absolute;inset:0;display:grid;place-items:center;padding:16px;color:#c6d4e6;font-size:13px;text-align:center;line-height:1.5;pointer-events:none}
+@media(max-width:760px){.viewport{height:clamp(260px,48vh,460px);min-height:260px}}
 </style>
