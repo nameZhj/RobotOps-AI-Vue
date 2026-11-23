@@ -1,26 +1,23 @@
 # AI Index
 
-> Compact Agent entry point. Detailed navigation: `.agent/INDEX.md`. Symbol index: `.agent/SOURCE_INDEX.md`.
+> Compact Agent entry point. Detailed routing: `.agent/INDEX.md`. Export symbols: `.agent/SOURCE_INDEX.md`.
 
-## Task routing
-
-| Task | Read first | Implementation |
+| Task | First read | Code entry |
 |---|---|---|
 | Auth / RBAC | `docs/authentication.md` | `src/modules/auth/`, `src/shared/auth/` |
-| Device inventory | `src/modules/devices/README.md` | `src/modules/devices/` |
-| Map / route / cloud | `src/modules/maps/README.md` | `src/modules/maps/` |
-| Task lifecycle | `docs/contracts/task-state.md` | `src/modules/tasks/` |
-| HTTP client | `docs/contracts/http-client.md` | `src/shared/api/http.ts` |
-| MQTT / realtime | `docs/contracts/mqtt-gateway.md` | `src/shared/mqtt/` |
-| Responsive style | `AGENTS.md` section 3 | `src/styles/`, `src/shared/layout/` |
-| Command center | `src/modules/visualization/README.md` | `src/modules/visualization/` |
-| Logs | `src/modules/logs/README.md` | `src/modules/logs/` |
+| Devices | `src/modules/devices/README.md` | `src/modules/devices/` |
+| Maps / routes / PCD | `src/modules/maps/README.md` | `src/modules/maps/` |
+| Tasks | `docs/contracts/task-state.md` | `src/modules/tasks/` |
+| HTTP | `docs/contracts/http-client.md` | `src/shared/api/http.ts` |
+| MQTT | `docs/contracts/mqtt-gateway.md` | `src/shared/mqtt/client.ts`, `validation.ts` |
+| Responsive UI | `AGENTS.md` section 3 | `src/styles/`, `src/shared/layout/` |
+| Dashboard / logs | `.agent/INDEX.md` | `src/modules/visualization/`, `src/modules/logs/` |
 
-## Core flows
+## Data flows
 
-- HTTP: `View -> module API -> shared http -> Backend BFF`
-- Auth: memory access token + HttpOnly refresh cookie + server-side RBAC
-- MQTT: backend ticket API -> WSS broker + topic ACL -> normalized messages
+- HTTP: `View -> module API -> shared HTTP -> backend BFF`
+- Auth: memory-only access token + HttpOnly refresh cookie + server-side RBAC
+- MQTT: backend ticket -> WSS + broker ACL -> validated feature messages
 - Map: PGM + ROS YAML -> validated occupancy grid -> Three.js
 
-Do not scan node_modules, generated output, binary models, raw maps or full logs unless explicitly needed.
+Do not scan node_modules, generated bundles, binary maps, meshes or raw logs unless specifically required.
