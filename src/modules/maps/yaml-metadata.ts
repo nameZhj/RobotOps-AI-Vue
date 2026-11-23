@@ -13,7 +13,11 @@ export interface MapYamlMetadata {
 function scalar(source: string, key: string): string | undefined {
   const line = source.split(/\r?\n/).find(item => new RegExp(`^\\s*${key}\\s*:`).test(item))
   if (!line) return undefined
-  return line.slice(line.indexOf(':') + 1).split('#', 1)[0].trim()
+  const value = line.slice(line.indexOf(':') + 1).split('#', 1)[0].trim()
+  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    return value.slice(1, -1).trim()
+  }
+  return value
 }
 
 /** Parse the scalar subset of ROS map_server YAML; anchors and arbitrary YAML are intentionally unsupported. */
