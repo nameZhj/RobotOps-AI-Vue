@@ -1,6 +1,7 @@
 import mqtt, { type MqttClient } from 'mqtt'
 import { ApiError } from '@/shared/api/http'
 import { requestMqttTicket } from './ticket-api'
+import { isAuthenticationFailure, topicMatches, validateTicket, validateTopic } from './validation'
 import type {
   MqttConnectTicket, MqttConnectionState, MqttIncomingMessage,
   MqttMessageHandler, MqttQos, MqttStateHandler, MqttStateSnapshot,
@@ -60,12 +61,11 @@ export class MqttGatewayClient {
     let ticket: MqttConnectTicket
     try {
       ticket = await this.ticketProvider()
-      this.validateTicket(ticket)
+      validateTicket(ticket)
     } catch (error) {
       const denied = error instanceof ApiError && [401, 403].includes(error.status)
       this.authRejected = denied
-      const message = denied ? 'MQTT ticket 被后端拒绝，请重新登录或检查权限' : '无法获取 MQTT 连接凭证'
-      this.setState('error', message)
+      this.setState('error', denied ? 'MQTT ticket 被后端拒绝，请重新登录或检查权限' : '无法获取 MQTT 连接凭证')
       if (!denied) this.scheduleReconnect()
       throw error
     }
@@ -127,35 +127,17 @@ export class MqttGatewayClient {
         if (this.client === client) this.client = null
         this.clearTimer('ticket')
         if (!settled) settle(new Error('MQTT 连接在握手完成前关闭'))
-        if (this.authRejected) {
-          this.setState('error', 'MQTT 认证或 Topic ACL 被拒绝，等待人工处理')
-        } else if (!this.manuallyClosed) {
+        if (this.authRejected) this.setState('error', 'MQTT 认证或 Topic ACL 被拒绝，等待人工处理')
+        else if (!this.manuallyClosed) {
           this.setState('reconnecting', 'MQTT 连接已断开')
           this.scheduleReconnect()
-        } else {
-          this.setState('disconnected')
-        }
+        } else this.setState('disconnected')
       })
 
       client.on('offline', () => {
         if (!this.manuallyClosed && !this.authRejected) this.setState('reconnecting', 'MQTT 网络暂时不可用')
       })
     })
-  }
-
-  private validateTicket(ticket: MqttConnectTicket) {
-    if (!ticket || typeof ticket.url !== 'string') throw new Error('MQTT 凭证格式无效')
-    const url = new URL(ticket.url)
-    if (url.protocol !== 'wss:' || url.username || url.password || url.search || url.hash) {
-      throw new Error('MQTT 网关必须使用不含 URL 凭证的安全 WSS 地址')
-    }
-    if (![ticket.clientId, ticket.username, ticket.password].every(value => typeof value === 'string' && value.length > 0)) {
-      throw new Error('MQTT 短时凭证字段不完整')
-    }
-    const expiresAt = Date.parse(ticket.expiresAt)
-    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now() + 5_000) {
-      throw new Error('MQTT 短时凭证已过期或即将过期')
-    }
   }
 
   private dispatchMessage(topic: string, bytes: Uint8Array, qos: MqttQos, retain: boolean) {
@@ -177,9 +159,7 @@ export class MqttGatewayClient {
     if (!subscription) {
       subscription = { qos, handlers: new Set() }
       this.subscriptions.set(topic, subscription)
-    } else if (qos > subscription.qos) {
-      subscription.qos = qos
-    }
+    } else if (qos > subscription.qos) subscription.qos = qos
     subscription.handlers.add(handler)
     if (this.client?.connected) this.subscribeTopic(this.client, topic, subscription.qos)
 
@@ -242,11 +222,9 @@ export class MqttGatewayClient {
   }
 
   private scheduleTicketRenewal(expiresAt: string, client: MqttClient) {
-    const remaining = Date.parse(expiresAt) - Date.now()
-    const renewIn = Math.max(1_000, remaining - 15_000)
+    const renewIn = Math.max(1_000, Date.parse(expiresAt) - Date.now() - 15_000)
     this.ticketTimer = setTimeout(() => {
-      if (this.client !== client || this.manuallyClosed) return
-      client.end(true)
+      if (this.client === client && !this.manuallyClosed) client.end(true)
     }, renewIn)
   }
 
@@ -257,26 +235,4 @@ export class MqttGatewayClient {
     if (which === 'ticket') this.ticketTimer = null
     if (which === 'connect') this.connectTimer = null
   }
-}
-
-function isAuthenticationFailure(error: Error): boolean {
-  return /not authorized|unauthori[sz]ed|bad user(name)? or password|bad credentials|access denied/i.test(error.message)
-}
-
-function validateTopic(topic: string, allowWildcards: boolean) {
-  if (!topic || topic.length > 512 || /[\u0000-\u0020]/.test(topic)) throw new Error('MQTT Topic 无效')
-  if (!allowWildcards && /[+#]/.test(topic)) throw new Error('发布 Topic 不允许使用通配符')
-  if (allowWildcards && (topic.split('/').some((part, index, all) => part.includes('#') && (part !== '#' || index !== all.length - 1)) ||
-      topic.split('/').some(part => part.includes('+') && part !== '+'))) throw new Error('MQTT Topic 通配符位置无效')
-}
-
-function topicMatches(filter: string, topic: string): boolean {
-  if (topic.startsWith('$') && (filter.startsWith('#') || filter.startsWith('+'))) return false
-  const filters = filter.split('/')
-  const levels = topic.split('/')
-  for (let index = 0; index < filters.length; index++) {
-    if (filters[index] === '#') return index === filters.length - 1
-    if (index >= levels.length || (filters[index] !== '+' && filters[index] !== levels[index])) return false
-  }
-  return filters.length === levels.length
 }
