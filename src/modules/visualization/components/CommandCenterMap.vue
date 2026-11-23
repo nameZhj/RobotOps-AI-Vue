@@ -45,7 +45,7 @@ const demoRoutes: RouteGraph = {
 const demoRobots: MapRobotMarker[] = [
   { id: 'AGV-014', label: 'AGV-014', x: 3.2, y: 2.3, heading: 0.2, state: 'online' },
   { id: 'DOG-003', label: 'DOG-003', x: 13.3, y: 11.1, heading: 1.1, state: 'online' },
-  { id: 'G1-002', label: 'G1-002', x: 21.4, y: 5.3, heading: 2.2, state: 'offline' },
+  { id: 'G1-002', label: 'G1-002', x: 21.4, y: 5.3, heading: 2.2, state: 'degraded' },
 ]
 const demoEvents: MapEventMarker[] = [
   { id: 'EV-0912', label: 'P-08', x: 18.7, y: 12.1, severity: 'critical' },
