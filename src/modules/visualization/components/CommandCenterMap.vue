@@ -179,7 +179,7 @@ async function onPcd(event: Event) {
         fill
         @load-error="error = $event"
       />
-      <div class="map-orientation">N ↑ <span>MAP FRAME</span></div>
+      <div class="map-orientation">+Y ↑ <span>MAP FRAME</span></div>
       <div class="map-legend">
         <span><i class="legend-robot"></i>机器人位置</span>
         <span><i class="legend-route"></i>任务路线</span>
