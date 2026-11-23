@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { DeviceSummary } from '@/modules/devices/types'
 
 defineProps<{ devices: DeviceSummary[]; demo: boolean; loading: boolean }>()
-
-const onlineCount = computed(() => 0)
 const patrolStats = [
   { label: '巡检点位', value: '14' },
   { label: '已完成', value: '11' },
