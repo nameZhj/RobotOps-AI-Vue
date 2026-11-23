@@ -82,5 +82,5 @@ async function onYaml(event: Event) {
 </template>
 
 <style scoped>
-.upload-actions{display:flex;gap:8px;flex-wrap:wrap}.upload{display:inline-flex;padding:9px 15px;border-radius:7px;background:#287bd7;color:#fff;font-size:12px;cursor:pointer}.upload.secondary{background:#263b59}.upload input{display:none}.cloud-name{font-size:11px;margin-bottom:0}.map-head{display:flex;justify-content:space-between;margin-bottom:14px;font-size:13px}.section-title{font-size:14px;font-weight:600}.panel p{font-size:12px;line-height:1.7}
+.upload-actions{display:flex;min-width:0;gap:8px;flex-wrap:wrap}.upload{display:inline-flex;align-items:center;justify-content:center;min-height:38px;max-width:100%;padding:8px 14px;border:1px solid #5c9be3;border-radius:7px;background:var(--primary);color:#fff;font-size:12px;font-weight:650;line-height:1.35;text-align:center;overflow-wrap:anywhere;cursor:pointer}.upload.secondary{border-color:var(--line-strong);background:var(--surface-hover);color:var(--text)}.upload input{display:none}.cloud-name{font-size:11px;margin-bottom:0;overflow-wrap:anywhere}.map-head{display:flex;min-width:0;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;margin-bottom:14px;font-size:13px}.map-head>*{min-width:0;overflow-wrap:anywhere}.section-title{font-size:14px;font-weight:600}.panel p{font-size:12px;line-height:1.7}
 </style>
