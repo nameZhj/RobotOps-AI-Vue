@@ -27,7 +27,7 @@ async function submit() {
         <el-form-item label="用户名"><el-input v-model="username" size="large" autocomplete="username" /></el-form-item>
         <el-form-item label="密码"><el-input v-model="password" size="large" type="password" show-password autocomplete="current-password" @keyup.enter="submit" /></el-form-item>
         <el-alert v-if="error" :title="error" type="error" :closable="false" />
-        <el-button type="primary" size="large" :loading="loading" class="submit" @click="submit">登录控制台</el-button>
+        <el-button native-type="submit" type="primary" size="large" :loading="loading" class="submit">登录控制台</el-button>
       </el-form>
       <small>当前为本地 Mock 模式，不可用于生产环境</small>
     </section>
@@ -35,5 +35,12 @@ async function submit() {
 </template>
 
 <style scoped>
-.login-screen{min-height:100vh;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 15%,#1d3557 0%,#0b1020 58%)}.login-card{width:390px;padding:38px;background:rgba(17,26,44,.94);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 90px #0006}.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#3c9cff,#655cff);display:grid;place-items:center;font-weight:900;font-size:24px}.login-card h1{font-size:21px;margin:22px 0 6px}.login-card p,.login-card small{color:var(--muted);font-size:12px}.login-card form{margin-top:28px}.submit{width:100%;margin-top:10px}.login-card small{display:block;text-align:center;margin-top:22px}
+.login-screen{min-height:100vh;min-height:100dvh;width:100%;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 50% 15%,#1d3557 0%,#0b1020 58%)}
+.login-card{width:min(390px,100%);min-width:0;padding:clamp(20px,5vw,38px);background:rgba(17,26,44,.98);border:1px solid #526782;border-radius:16px;box-shadow:0 24px 90px #0008}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#175aa6,#3a4ca8);display:grid;place-items:center;font-weight:900;font-size:24px;color:#fff}
+.login-card h1{font-size:clamp(19px,4vw,22px);line-height:1.3;margin:22px 0 6px;overflow-wrap:anywhere}
+.login-card p,.login-card small{color:#c3d0e1;font-size:12px;line-height:1.5}
+.login-card form{margin-top:28px}
+.submit{width:100%;margin-top:10px;min-height:44px}
+.login-card small{display:block;text-align:center;margin-top:22px}
 </style>
