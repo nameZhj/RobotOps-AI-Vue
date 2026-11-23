@@ -1,6 +1,6 @@
 {
   "name": "robotops-ai-vue",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,13 +8,13 @@
     "build": "vue-tsc --noEmit -p tsconfig.app.json && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "vue-tsc --noEmit -p tsconfig.app.json",
-    "ai:index": "node scripts/generate-ai-index.mjs",
-    "test": "vitest run"
+    "ai:index": "node scripts/generate-ai-index.mjs"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
     "echarts": "^6.0.0",
     "element-plus": "^2.14.8",
+    "mqtt": "^5.16.0",
     "pinia": "^4.1.0",
     "three": "^0.186.0",
     "vue": "^3.5.46",
@@ -26,7 +26,6 @@
     "@vitejs/plugin-vue": "^6.0.9",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
-    "vue-tsc": "^3.3.7",
-    "vitest": "^5.0.1"
+    "vue-tsc": "^3.3.7"
   }
 }
