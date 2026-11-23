@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import './command-center.css'
+
 const stats = [
   { name: '在线设备', value: '21', unit: '/ 24' },
   { name: '今日任务', value: '57', unit: '条' },
@@ -19,7 +21,7 @@ function statusType(status: string) {
 </script>
 
 <template>
-  <div class="screen">
+  <div class="command-center">
     <header class="screen-header">
       <div class="screen-brand">
         <b>ROBOTOPS</b>
@@ -90,159 +92,3 @@ function statusType(status: string) {
     </footer>
   </div>
 </template>
-
-<style scoped>
-.screen {
-  width: 100%;
-  min-width: 0;
-  min-height: calc(100vh - 58px);
-  padding: clamp(14px, 2vw, 28px);
-  color: #e8f2ff;
-  background: radial-gradient(ellipse at 48% 0%, #152b4d, #08111f 65%);
-}
-.screen-header {
-  display: flex;
-  min-width: 0;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px 20px;
-  padding: 4px 4px 18px;
-  border-bottom: 1px solid #4e86bd77;
-}
-.screen-brand { display: flex; min-width: 0; flex-wrap: wrap; align-items: baseline; gap: 8px 18px; }
-.screen-brand b {
-  color: #8dceff;
-  font-size: clamp(18px, 2vw, 24px);
-  letter-spacing: 2px;
-}
-.screen-brand span { color: #d5e7fa; font-size: 13px; }
-.screen-header > small { color: #72e4c0; letter-spacing: 1.5px; }
-.screen-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin: 18px 0;
-}
-.stat-card, .screen-panel {
-  min-width: 0;
-  padding: clamp(12px, 1.4vw, 18px);
-  border: 1px solid #527da6;
-  border-radius: 10px;
-  background: #10223a;
-}
-.stat-card small {
-  display: block;
-  color: #c1d6ec;
-  font-size: 12px;
-  overflow-wrap: anywhere;
-}
-.stat-card strong {
-  display: block;
-  margin-top: 8px;
-  color: #8dceff;
-  font-size: clamp(24px, 2.5vw, 34px);
-  font-variant-numeric: tabular-nums;
-}
-.stat-card i {
-  margin-left: 6px;
-  color: #c1d6ec;
-  font-size: 12px;
-  font-style: normal;
-}
-.screen-body {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: minmax(0, 1.6fr) minmax(230px, 1fr) minmax(230px, 1fr);
-  gap: 14px;
-}
-.screen-panel h3 { margin: 0 0 16px; color: #d5e7fa; font-size: 13px; }
-.map-placeholder {
-  position: relative;
-  min-height: 280px;
-  height: clamp(280px, 48vh, 520px);
-  overflow: hidden;
-  border: 1px solid #47769e;
-  border-radius: 8px;
-  background: #09192a;
-}
-.grid-bg {
-  position: absolute;
-  inset: 0;
-  transform: perspective(400px) rotateX(20deg) scale(1.2);
-  background-image:
-    linear-gradient(#39749b66 1px, transparent 1px),
-    linear-gradient(90deg, #39749b66 1px, transparent 1px);
-  background-size: 36px 36px;
-}
-.robot {
-  position: absolute;
-  max-width: 30%;
-  padding: 7px 9px;
-  border: 1px solid #8bd0ff;
-  border-radius: 6px;
-  color: #fff;
-  background: #1265a7;
-  font-size: 10px;
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-.r1 { top: 26%; left: 20%; }
-.r2 { top: 52%; left: 68%; }
-.r3 { top: 68%; left: 34%; }
-.r4 { top: 20%; left: 76%; background: #573b74; }
-.route {
-  position: absolute;
-  top: 27%;
-  left: 20%;
-  width: 55%;
-  height: 38%;
-  transform: skew(-22deg);
-  border: 2px dashed #55e4bd;
-  border-radius: 30%;
-  pointer-events: none;
-}
-.fleet-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 14px 0;
-  border-bottom: 1px solid #527da655;
-}
-.fleet-info { min-width: 0; }
-.fleet-info b, .fleet-info small { display: block; overflow-wrap: anywhere; }
-.fleet-info b { color: #f4f8ff; font-size: 12px; }
-.fleet-info small { margin-top: 6px; color: #c1d6ec; font-size: 10px; }
-.fleet-row .el-tag { flex: 0 0 auto; }
-.big-number { padding: 12px 0; color: #8dceff; font-size: clamp(38px, 4vw, 54px); }
-.big-number small { display: block; color: #c1d6ec; font-size: 12px; }
-.progress-row {
-  display: grid;
-  grid-template-columns: 55px minmax(0, 1fr) 22px;
-  align-items: center;
-  gap: 8px;
-  margin: 18px 0;
-  color: #d5e7fa;
-  font-size: 10px;
-}
-.screen footer {
-  margin-top: 20px;
-  color: #b5cbe1;
-  font-size: 10px;
-  line-height: 1.5;
-  text-align: center;
-}
-@media (max-width: 1100px) {
-  .screen-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .screen-panel.map { grid-column: 1 / -1; }
-}
-@media (max-width: 680px) {
-  .screen-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .screen-body { grid-template-columns: minmax(0, 1fr); }
-  .screen-panel.map { grid-column: auto; }
-}
-@media (max-width: 380px) {
-  .screen-stats { grid-template-columns: minmax(0, 1fr); }
-}
-</style>
