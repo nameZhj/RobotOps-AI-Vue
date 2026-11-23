@@ -18,4 +18,4 @@ Do not infer `resolution`, `origin`, frame ID or orientation from image dimensio
 
 Canonical world frame: meters, right-handed, `map` frame, yaw in radians. Store image pixel coordinates separately. Convert using YAML origin transform and image row inversion. Never silently mix ROS `map`, `odom`, `base_link`, image pixels or Three.js render coordinates.
 
-The current map workspace requires a paired ROS YAML file before rendering PGM. The YAML parser intentionally supports the scalar subset (`resolution`, `origin`, `negate`, `occupied_thresh`, `free_thresh`, optional `frame_id`, and `image`) used by ROS map_server; it is not a general-purpose YAML parser.
+The current map workspace requires importing the PGM first and then its paired ROS YAML file before rendering. Selecting a new PGM clears previously loaded YAML metadata to prevent accidental reuse. The YAML parser intentionally supports the scalar subset (`resolution`, `origin`, `negate`, `occupied_thresh`, `free_thresh`, optional `frame_id`, and `image`) used by ROS map_server; it is not a general-purpose YAML parser.
