@@ -4,6 +4,8 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import '@/styles/tokens.css'
 import '@/styles/global.css'
+import '@/styles/controls.css'
+import '@/styles/responsive.css'
 import App from '@/app/App.vue'
 import { router } from '@/app/router'
 
