@@ -42,6 +42,7 @@ function onPlaybackError() {
       <div v-else-if="playbackError" class="video-message">
         <b>视频播放失败</b>
         <small>请检查播放地址、跨域和视频网关状态</small>
+        <button type="button" class="video-play" @click="togglePlayback">重试播放</button>
       </div>
       <div v-else class="video-idle">
         <div class="camera-glyph"><span></span></div>
@@ -55,6 +56,7 @@ function onPlaybackError() {
     <div class="video-foot">
       <span>CAM-01 · 主作业区</span>
       <small>{{ streamUrl ? '浏览器兼容的视频播放地址' : '需要接入 WebRTC / HLS 网关' }}</small>
+      <button v-if="playing" type="button" class="video-stop" @click="togglePlayback">停止播放</button>
     </div>
   </section>
 </template>
