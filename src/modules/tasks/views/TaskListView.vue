@@ -31,6 +31,11 @@ const stateLabels: Record<TaskState, string> = {
   canceled: '已取消',
 }
 
+function stateLabel(value: unknown): string {
+  if (typeof value !== 'string' || !(value in stateLabels)) return '未知状态'
+  return stateLabels[value as TaskState]
+}
+
 function stateTagType(state: TaskState) {
   if (state === 'running' || state === 'paused') return 'warning'
   if (state === 'succeeded') return 'success'
@@ -60,7 +65,7 @@ function stateTagType(state: TaskState) {
           <el-table-column label="状态" width="110">
             <template #default="scope">
               <el-tag :type="stateTagType(scope.row.state)">
-                {{ stateLabels[scope.row.state] }}
+                {{ stateLabel(scope.row.state) }}
               </el-tag>
             </template>
           </el-table-column>
