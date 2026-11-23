@@ -8,5 +8,14 @@ import '@/styles/controls.css'
 import '@/styles/responsive.css'
 import App from '@/app/App.vue'
 import { router } from '@/app/router'
+import { useAuthStore } from '@/modules/auth/store'
 
-createApp(App).use(createPinia()).use(router).use(ElementPlus).mount('#app')
+const pinia = createPinia()
+const app = createApp(App)
+
+app.use(pinia)
+window.addEventListener('robotops:session-expired', () => {
+  useAuthStore(pinia).clearSession()
+  void router.replace('/login')
+})
+app.use(router).use(ElementPlus).mount('#app')
