@@ -76,7 +76,9 @@ function clearDemoOverlays() {
 function applyMapPackage() {
   if (!parsedPgm.value || !yamlMetadata.value) {
     grid.value = null
-    mapHint.value = 'PGM 已解析，请导入对应 YAML 获取准确分辨率和地图原点'
+    mapHint.value = parsedPgm.value
+      ? 'PGM 已解析，请导入对应 YAML 获取准确分辨率和地图原点'
+      : '请先导入 PGM 地图，再导入配套 YAML 文件'
     return
   }
   const expectedImage = yamlMetadata.value.imagePath?.replace(/\\/g, '/').split('/').pop()
