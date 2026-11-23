@@ -129,6 +129,7 @@ async function execute<T>(path: string, init: RequestInit, timeoutMs: number, ac
  */
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const normalizedPath = normalizePath(path)
+  const endpointPath = normalizedPath.split('?', 1)[0]
   const { timeoutMs = DEFAULT_TIMEOUT_MS, auth = true, ...init } = options
   const method = (init.method || 'GET').toUpperCase()
   const headers = new Headers(init.headers)
@@ -136,7 +137,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   try {
     return await execute<T>(normalizedPath, init, timeoutMs, token)
   } catch (error) {
-    if (!(error instanceof ApiError) || error.status !== 401 || !auth || AUTH_ENDPOINTS.has(normalizedPath)) throw error
+    if (!(error instanceof ApiError) || error.status !== 401 || !auth || AUTH_ENDPOINTS.has(endpointPath)) throw error
     const refreshed = await refreshAccessToken(timeoutMs)
     if (!refreshed) {
       tokenStore.clear()
