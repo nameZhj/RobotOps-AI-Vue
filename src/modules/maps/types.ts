@@ -16,7 +16,7 @@ export interface MapRobotMarker {
   x: number
   y: number
   heading?: number
-  state: 'online' | 'offline'
+  state: 'online' | 'degraded' | 'offline'
 }
 export interface MapEventMarker {
   id: string
