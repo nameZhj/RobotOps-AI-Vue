@@ -35,9 +35,6 @@ function updateScale() {
   scale.value = Math.min(width / DESIGN_WIDTH, height / DESIGN_HEIGHT)
 }
 
-function statusType(status: string) {
-  return status === '离线' ? 'danger' : 'success'
-}
 
 function exitCommandCenter() {
   void router.replace({ name: 'dashboard' })
